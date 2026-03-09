@@ -2,6 +2,7 @@
 
 #include <QtWidgets/QMainWindow>
 #include <QCloseEvent>
+#include <QHideEvent>
 #include <QSystemTrayIcon>
 #include <QAction>
 #include <memory>
@@ -22,6 +23,7 @@ class BatActivator : public QMainWindow {
 
  protected:
   void closeEvent(QCloseEvent *event);
+  void hideEvent(QHideEvent *event);
 
  private slots:
   void batBtnPressed();

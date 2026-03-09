@@ -9,12 +9,12 @@
 #include <QLocalSocket>
 #include <QMessageBox>
 #include <QProcess>
+#include <QPropertyAnimation>
 #include <QRegularExpression>
 #include <QStyle>
 #include <sstream>
 
 #include "BatParser/batparser.h"
-#include <QPropertyAnimation>
 
 BatActivator::BatActivator(QWidget *parent) : QMainWindow(parent) {
   ui.setupUi(this);
@@ -48,10 +48,15 @@ BatActivator::BatActivator(QWidget *parent) : QMainWindow(parent) {
   }
 }
 
-BatActivator::~BatActivator() { delete trayIcon_; }
+BatActivator::~BatActivator() {
+  delete trayIcon_;
+  delete batAnimationWidget;
+  delete batFlyOnAnimation;
+  delete batFlyOffAnimation;
+}
 
 void BatActivator::closeEvent(QCloseEvent *event) {
-  if (!event->spontaneous() || !isVisible()) {
+  if (!event->spontaneous() && !isVisible()) {
     turnOffBat();
     QApplication::quit();
     return;
@@ -61,6 +66,16 @@ void BatActivator::closeEvent(QCloseEvent *event) {
     event->ignore();
     this->hide();
   }
+}
+
+void BatActivator::hideEvent(QHideEvent *event) {
+  if (event->spontaneous()) close();
+
+  trayIcon_->showMessage(
+      "Bat Launcher",
+      "The application is minimized to the system tray. To open the "
+      "application window, click the application icon in the tray",
+      QIcon(":/BatActivator/Icons/bat.ico"), 2000);
 }
 
 void BatActivator::batBtnPressed() {
@@ -81,16 +96,15 @@ void BatActivator::batChoose() {
     QMessageBox msgBox;
     msgBox.setWindowTitle("Launched files");
     msgBox.setText(
-        "After turn off, all processes with these names will be terminated:\n- " +
+        "After turn off, all processes with these names will be "
+        "terminated:\n- " +
         exeNames.join("\n- "));
     msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
     msgBox.setDefaultButton(QMessageBox::Ok);
     int ret = msgBox.exec();
 
     if (ret == QMessageBox::Ok) {
-      if (batState_) {
-        turnOffBat();
-      }
+      turnOffBat();
 
       batPath_ = path;
       exeNames_ = std::move(exeNames);
@@ -270,7 +284,7 @@ void BatActivator::createAnimation() {
       new QPropertyAnimation(batAnimationWidget, "pos", this);
   offPosAnim->setDuration(500);
   offPosAnim->setKeyValueAt(0, QPoint(-10, 65));
-  //offPosAnim->setKeyValueAt(0.2, QPoint(100, -200));
+  // offPosAnim->setKeyValueAt(0.2, QPoint(100, -200));
   offPosAnim->setKeyValueAt(1, QPoint(250, -50));
   offPosAnim->setEasingCurve(QEasingCurve::OutQuad);
 
