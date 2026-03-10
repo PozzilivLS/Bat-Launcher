@@ -18,3 +18,5 @@
 - In the **Settings** menu, you can enable/disable **auto-start of the program when the PC starts**.
 - In the **Settings** menu, you can enable/disable **automatic launch of your .bat file when the application starts**.
 - The releases also include a Windows [service](https://github.com/PozzilivLS/Bat-Launcher-Service-source-code)
+<br>
+Uses icon from Flaticon.com
