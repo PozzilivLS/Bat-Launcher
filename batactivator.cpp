@@ -56,26 +56,27 @@ BatActivator::~BatActivator() {
 }
 
 void BatActivator::closeEvent(QCloseEvent *event) {
-  if (!event->spontaneous() && !isVisible()) {
-    turnOffBat();
-    QApplication::quit();
+  if (!event->spontaneous()) {
     return;
   }
 
   if (isVisible()) {
     event->ignore();
-    this->hide();
+    hide();
   }
 }
 
 void BatActivator::hideEvent(QHideEvent *event) {
-  if (event->spontaneous()) close();
+  hide();
 
-  trayIcon_->showMessage(
-      "Bat Launcher",
-      "The application is minimized to the system tray. To open the "
-      "application window, click the application icon in the tray",
-      QIcon(":/BatActivator/Icons/bat.ico"), 2000);
+  if (!hideMessageShowed_) {
+    trayIcon_->showMessage(
+        "Bat Launcher",
+        "The application is minimized to the system tray. To open the "
+        "application window, click the application icon in the tray",
+        QIcon(":/BatActivator/Icons/bat.ico"), 2000);
+    hideMessageShowed_ = true;
+  }
 }
 
 void BatActivator::batBtnPressed() {
@@ -123,14 +124,17 @@ void BatActivator::autostartChanged(bool value) {
   HKEY hKey;
   wchar_t szPath[MAX_PATH];
   GetModuleFileName(NULL, szPath, MAX_PATH);
+
+  std::wstring path = std::wstring(szPath) + L" --autostart";
+
   RegCreateKeyEx(
       HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run",
       NULL, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL);
 
   if (hKey) {
     if (value) {
-      RegSetValueEx(hKey, L"BatLauncher", NULL, REG_SZ, (LPBYTE)szPath,
-                    (wcslen(szPath) + 1) * sizeof(wchar_t));
+      RegSetValueEx(hKey, L"BatLauncher", NULL, REG_SZ, (LPBYTE)path.data(),
+                    (wcslen(path.data()) + 1) * sizeof(wchar_t));
     } else {
       RegDeleteValue(hKey, L"BatLauncher");
     }
@@ -154,6 +158,11 @@ void BatActivator::iconActivated(QSystemTrayIcon::ActivationReason reason) {
     default:
       break;
   }
+}
+
+void BatActivator::exit() {
+  turnOffBat();
+  QApplication::quit();
 }
 
 void BatActivator::saveData() {
@@ -233,7 +242,7 @@ void BatActivator::createTrayMenu() {
   QAction *quitAction = new QAction(tr("Exit"), this);
 
   connect(viewWindow, SIGNAL(triggered()), this, SLOT(show()));
-  connect(quitAction, SIGNAL(triggered()), this, SLOT(close()));
+  connect(quitAction, SIGNAL(triggered()), this, SLOT(exit()));
 
   menu->addAction(viewWindow);
   menu->addAction(quitAction);

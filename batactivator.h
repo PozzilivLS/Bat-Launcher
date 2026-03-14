@@ -34,6 +34,8 @@ class BatActivator : public QMainWindow {
 
   void iconActivated(QSystemTrayIcon::ActivationReason reason);
 
+  void exit();
+
  private:
   void createTrayMenu();
   void connectMenuBar();
@@ -61,6 +63,7 @@ class BatActivator : public QMainWindow {
   bool autostart_ = false;
 
   QSystemTrayIcon *trayIcon_;
+  bool hideMessageShowed_ = false;
 
   std::unique_ptr<ServiceManager> serviceManager_;
 
